@@ -1,26 +1,24 @@
-FROM python:3.11-slim AS base
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# 安装最基础运行依赖（无 gcc）
+# 基础依赖
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     libsqlite3-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装 python 依赖
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-        python-telegram-bot==20.7 \
-        python-dotenv
+# 安装 Python 包
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# 将所有项目文件复制进去
-COPY . .
+# 复制 src 目录到容器
+COPY src/ /app/
 
-# 数据目录
+# 创建数据目录
 RUN mkdir -p /app/data
 
-ENV PYTHONUNBUFFERED=1 \
-    TG_BOT_DATA_DIR=/app/data
+ENV TG_BOT_DATA_DIR=/app/data \
+    PYTHONUNBUFFERED=1
 
 CMD ["python", "host_bot.py"]
