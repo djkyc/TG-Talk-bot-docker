@@ -6,7 +6,7 @@ on:
       branch:
         description: "📌 请输入分支名字（例如：1.03）。镜像版本号将与分支名一致。"   # 请输入要构建的分支名，例如：1.03
         required: true
-        default: "main"
+        default: "1.03"
 
 permissions:
   contents: read
