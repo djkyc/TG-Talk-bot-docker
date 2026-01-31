@@ -33,14 +33,14 @@ const args = process.argv.slice(2);
 const command = args.length > 0 ? args[0] : 'npm';
 const commandArgs = args.length > 0 ? args.slice(1) : ['start'];
 
-console.log(`[Entrypoint] 启动主进程: ${command} ${commandArgs.join(' ')}`);
+console.log('[Entrypoint] 启动主进程: ' + command + ' ' + commandArgs.join(' '));
 
 const child = spawn(command, commandArgs, { stdio: 'inherit' });
 
-child.于('close'， (code) => {
+child.on('close', function(code) {
     process.exit(code);
 });
 
 // 处理信号传递
-process.on('SIGTERM', () => child.kill('SIGTERM'));
-process.于('SIGINT', () => child.kill('SIGINT'));
+process.on('SIGTERM', function() { child.kill('SIGTERM'); });
+process.on('SIGINT', function() { child.kill('SIGINT'); });
