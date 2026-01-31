@@ -1,24 +1,26 @@
-FROM python:3.11-slim
+# 使用 Node.js 20 Alpine 作为基础镜像
+FROM node:20-alpine
 
+# 安装基础运行工具
+RUN apk add --no-cache git python3 make g++ build-base
+
+# 设置工作目录
 WORKDIR /app
 
-# 基础依赖
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libsqlite3-0 \
-    && rm -rf /var/lib/apt/lists/*
+# 复制 package.json 和 lock 文件 (如果有)
+COPY package.json ./
 
-# 安装 Python 包
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# 安装依赖
+RUN npm install
 
-# 复制 src 目录到容器
-COPY src/ /app/
+# 复制项目所有文件
+COPY . .
 
-# 创建数据目录
-RUN mkdir -p /app/data
+# 复制入口脚本
+COPY docker-entrypoint.js ./
 
-ENV TG_BOT_DATA_DIR=/app/data \
-    PYTHONUNBUFFERED=1
+# 设置入口点
+ENTRYPOINT ["node", "docker-entrypoint.js"]
 
-CMD ["python", "host_bot.py"]
+# 默认启动命令 (会作为参数传给 ENTRYPOINT)
+CMD ["npm", "start"]
