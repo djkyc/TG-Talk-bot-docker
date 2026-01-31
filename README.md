@@ -1,4 +1,142 @@
+
+
 # TeleBox Docker 部署指南
+---
+# TeleBox Docker 部署方案
+
+基于官方 [TeleBoxDev/TeleBox](https://github.com/TeleBoxDev/TeleBox) 的 Docker 容器化部署方案，支持环境变量注入，适配各类容器平台。
+
+## ✨ 特性
+
+- 🐳 一键 Docker 镜像部署
+- 🔐 支持通过环境变量配置登录凭据
+- ☁️ 适配 Railway / Zeabur / Render / Hugging Face 等容器平台
+- 🔄 GitHub Actions 自动构建镜像
+
+---
+
+## 🚀 快速部署
+
+### 第一步：获取 Session String
+
+由于容器平台不支持交互式登录，您需要先在本地获取登录凭据。
+
+1. 确保本地已安装 [Node.js](https://nodejs.org/)
+2. 克隆本仓库并运行登录工具：
+
+```bash
+git clone https://github.com/djkyc/TG-Talk-bot-docker.git
+cd TG-Talk-bot-docker/local_session_tool
+npm install
+node index.js
+```
+
+3. 按提示输入：
+   - API ID 和 API Hash（从 [my.telegram.org](https://my.telegram.org) 获取）
+   - 手机号（格式：`+8613800000000`）
+   - 验证码
+   - 两步验证密码（如有）
+
+4. 登录成功后，复制输出的 **Session String**（一长串字符）
+
+---
+
+### 第二步：部署到容器平台
+
+#### 方式 A：使用预构建镜像（推荐）
+
+镜像地址：
+```
+ghcr.io/djkyc/tg-talk-bot-docker:latest
+```
+
+#### 方式 B：自行构建
+
+1. Fork 本仓库
+2. 进入 Actions → `Build and Push Docker Image` → Run workflow
+3. 构建完成后使用：`ghcr.io/您的用户名/仓库名:latest`
+
+---
+
+### 第三步：配置环境变量
+
+在容器平台中添加以下环境变量：
+
+| 变量名 | 必填 | 说明 |
+| :--- | :---: | :--- |
+| `API_ID` | ✅ | Telegram API ID |
+| `API_HASH` | ✅ | Telegram API Hash |
+| `SESSION_STRING` | ✅ | 第一步获取的登录凭据 |
+| `TZ` | ❌ | 时区，默认 `Asia/Shanghai` |
+
+配置完成后启动容器，看到 `✅ Existing session detected` 即表示成功！
+
+---
+
+## 🛠️ 本地运行（可选）
+
+如果您有 VPS，也可以使用 Docker Compose：
+
+```bash
+git clone https://github.com/TeleBoxDev/TeleBox.git
+cd TeleBox
+
+# 创建配置
+cat > docker-compose.yml <<EOF
+version: '3.8'
+services:
+  telebox:
+    build: .
+    container_name: telebox
+    restart: unless-stopped
+    network_mode: "host"
+    volumes:
+      - ./my_session:/app/my_session
+    environment:
+      TZ: Asia/Shanghai
+    stdin_open: true 
+    tty: true
+EOF
+
+# 启动
+docker compose up --build -d
+
+# 首次登录
+docker attach telebox
+```
+
+---
+
+## 📁 文件说明
+
+| 文件 | 说明 |
+| :--- | :--- |
+| `Dockerfile` | Docker 镜像构建配置 |
+| `docker-entrypoint.js` | 支持环境变量的入口脚本 |
+| `.github/workflows/` | GitHub Actions 自动构建工作流 |
+| `local_session_tool/` | 本地 Session String 生成工具 |
+
+---
+
+## ⚠️ 常见问题
+
+**Q: 卡在 "Connecting to Telegram..." 怎么办？**  
+A: 使用 `network_mode: "host"` 或检查网络是否能访问 Telegram。
+
+**Q: 验证码无效？**  
+A: 确保手机号带上国家代码（如 `+86`），验证码从 Telegram App 查看。
+
+**Q: Session 失效了？**  
+A: 重新运行 `local_session_tool` 获取新的 Session String。
+
+---
+
+## 📜 许可证
+
+本项目基于 [TeleBox](https://github.com/TeleBoxDev/TeleBox) 构建，遵循 LGPL-2.1 协议。
+
+
+---
 
 一份基于 Docker Compose 的 TeleBox 完整部署方案。本方案完美解决了官方仓库缺省 Docker 支持的问题，并适配了国内/香港 VPS 环境，提供稳定的后台常驻能力。
 
