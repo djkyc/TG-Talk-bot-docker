@@ -1,42 +1,69 @@
-name: Build and Push Docker Image (main → latest)
+name: Build and Push Docker Image
 
 on:
-  workflow_dispatch:   # ✅ 只允许手动运行
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Checkout repository (main)
+      - name: Checkout TeleBox official repository
         uses: actions/checkout@v4
         with:
-          ref: main   # 🔒 明确只用 main 分支
+          repository: TeleBoxDev/TeleBox
+          ref: main
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Checkout our Docker config (overlay)
+        uses: actions/checkout@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          path: docker-overlay
+
+      - name: Copy Docker files to TeleBox
+        run: |
+          cp docker-overlay/Dockerfile .
+          cp docker-overlay/docker-entrypoint.js .
+          echo "✅ Docker 配置文件已覆盖"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image (latest only)
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=sha,prefix=
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/tg-talk:latest
-          labels: |
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-            org.opencontainers.image.description=TG-Talk main branch image
-            org.opencontainers.image.licenses=MIT
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
