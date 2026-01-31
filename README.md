@@ -38,6 +38,7 @@ node index.js
    - 两步验证密码（如有）
 
 4. 登录成功后，复制输出的 **Session String**（一长串字符）
+<img width="677" height="515" alt="image" src="https://github.com/user-attachments/assets/ea74e4c8-bc09-4266-8253-7f34d31b694b" />
 
 ---
 
