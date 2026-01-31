@@ -30,7 +30,8 @@ RUN npm install
 COPY . .
 CMD ["npm", "start"]
 EOF
-
+```
+```
 # 3. 写入 docker-compose.yml
 # 注意：首次运行关闭重启策略，以便进行交互登录
 cat > docker-compose.yml <<EOF
