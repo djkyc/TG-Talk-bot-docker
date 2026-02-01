@@ -10,7 +10,7 @@
 
 - 🐳 一键 Docker 镜像部署
 - 🔐 支持通过环境变量配置登录凭据
-- ☁️ 适配 Railway / Zeabur / Render / Hugging Face 等容器平台
+- ☁️ 适配 Railway / Zeabur / Render / Hugging Face/Fly.io/ 等容器平台(vercel不支持)
 - 🔄 GitHub Actions 自动构建镜像
 
 ---
